@@ -1,0 +1,35 @@
+# Root
+.DS_Store
+.env
+node_modules/
+dist/
+build/
+
+# Backend (Node.js + TypeScript)
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Android Studio (Frontend)
+frontend/.idea/
+frontend/.gradle/
+frontend/local.properties
+frontend/.DS_Store
+frontend/build/
+frontend/captures/
+frontend/.cxx/
+frontend/.externalNativeBuild/
+frontend/.signing/
+frontend/.expo/
+frontend/.vscode/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/pubspec.lock
+
+# macOS/Linux
+**/.DS_Store
+
+# Windows
+Thumbs.db
+
