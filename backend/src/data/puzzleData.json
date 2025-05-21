@@ -1,0 +1,22 @@
+[
+  { "theme": "Colors", "words": ["Red", "Blue", "Green", "Yellow"] },
+  { "theme": "Genres", "words": ["Action", "Drama", "Horror", "Comedy"] },
+  { "theme": "Fruits", "words": ["Apple", "Banana", "Grape", "Mango"] },
+  { "theme": "Emotions", "words": ["Happy", "Sad", "Angry", "Calm"] },
+  { "theme": "Animals", "words": ["Lion", "Elephant", "Giraffe", "Zebra"] },
+  { "theme": "Sports", "words": ["Soccer", "Basketball", "Tennis", "Swimming"] },
+  { "theme": "Countries", "words": ["Japan", "Brazil", "Canada", "Australia"] },
+  { "theme": "Vehicles", "words": ["Car", "Bicycle", "Airplane", "Boat"] },
+  { "theme": "Shapes", "words": ["Circle", "Square", "Triangle", "Rectangle"] },
+  { "theme": "Seasons", "words": ["Spring", "Summer", "Autumn", "Winter"] },
+  { "theme": "Instruments", "words": ["Guitar", "Piano", "Violin", "Drums"] },
+  { "theme": "Planets", "words": ["Mars", "Venus", "Jupiter", "Saturn"] },
+  { "theme": "Flowers", "words": ["Rose", "Tulip", "Daisy", "Lily"] },
+  { "theme": "Jobs", "words": ["Doctor", "Teacher", "Engineer", "Chef"] },
+  { "theme": "Weather", "words": ["Sunny", "Rainy", "Cloudy", "Snowy"] },
+  { "theme": "Clothing", "words": ["Shirt", "Pants", "Dress", "Jacket"] },
+  { "theme": "Drinks", "words": ["Coffee", "Tea", "Juice", "Water"] },
+  { "theme": "Tools", "words": ["Hammer", "Screwdriver", "Wrench", "Drill"] },
+  { "theme": "Trees", "words": ["Oak", "Pine", "Maple", "Birch"] },
+  { "theme": "Hobbies", "words": ["Painting", "Reading", "Hiking", "Cooking"] }
+]
