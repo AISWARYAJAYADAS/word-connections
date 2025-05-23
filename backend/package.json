@@ -3,16 +3,22 @@
   "version": "1.0.0",
   "description": "Backend API for Word Connections puzzle game inspired by NYT Connections",
   "main": "dist/server.js",
-  "type": "commonjs",
+  "module": "CommonJS",
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon -r tsconfig-paths/register src/server.ts",
-    "build": "tsc",
+    "build": "tsc && cp -r src/data dist/",
     "test": "jest --coverage",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write src/**/*.{ts,json}"
   },
-  "keywords": ["puzzle", "api", "typescript", "nodejs", "express"],
+  "keywords": [
+    "puzzle",
+    "api",
+    "typescript",
+    "nodejs",
+    "express"
+  ],
   "author": "Aiswarya Jayadas",
   "license": "ISC",
   "dependencies": {
@@ -23,6 +29,7 @@
     "winston": "^3.15.0"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
@@ -44,8 +51,12 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "roots": ["<rootDir>/src"],
-    "testMatch": ["**/*.test.ts"],
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "testMatch": [
+      "**/*.test.ts"
+    ],
     "moduleNameMapper": {
       "^@config/(.*)$": "<rootDir>/src/config/$1",
       "^@controllers/(.*)$": "<rootDir>/src/controllers/$1",
@@ -55,6 +66,10 @@
       "^@data/(.*)$": "<rootDir>/src/data/$1"
     },
     "coverageDirectory": "./coverage",
-    "collectCoverageFrom": ["src/**/*.ts", "!src/**/*.d.ts", "!src/server.ts"]
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/server.ts"
+    ]
   }
 }

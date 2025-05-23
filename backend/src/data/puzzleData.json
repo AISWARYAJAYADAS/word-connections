@@ -4,7 +4,10 @@
   { "theme": "Fruits", "words": ["Apple", "Banana", "Grape", "Mango"] },
   { "theme": "Emotions", "words": ["Happy", "Sad", "Angry", "Calm"] },
   { "theme": "Animals", "words": ["Lion", "Elephant", "Giraffe", "Zebra"] },
-  { "theme": "Sports", "words": ["Soccer", "Basketball", "Tennis", "Swimming"] },
+  {
+    "theme": "Sports",
+    "words": ["Soccer", "Basketball", "Tennis", "Swimming"]
+  },
   { "theme": "Countries", "words": ["Japan", "Brazil", "Canada", "Australia"] },
   { "theme": "Vehicles", "words": ["Car", "Bicycle", "Airplane", "Boat"] },
   { "theme": "Shapes", "words": ["Circle", "Square", "Triangle", "Rectangle"] },
