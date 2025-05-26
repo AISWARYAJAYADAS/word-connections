@@ -7,10 +7,12 @@
   "scripts": {
     "start": "node -r tsconfig-paths/register -r module-alias/register dist/server.js",
     "dev": "nodemon -r tsconfig-paths/register src/server.ts",
+    "postinstall": "npm run build",  
+    "render-build": "npm install --include=dev --ignore-scripts && npm run build",
     "build": "tsc && tsc-alias && npm run copy-assets",
+    "dev-install": "npm install --include=dev",
     "copy-assets": "node scripts/copy-assets.js",
     "prod": "npm run build && npm start",
-    "postinstall": "npm run build",
     "test": "jest --coverage",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
