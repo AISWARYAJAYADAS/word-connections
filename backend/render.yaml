@@ -1,0 +1,15 @@
+# render.yaml
+services:
+  - type: web
+    name: word-connections-backend
+    env: node
+    buildCommand: npm run render-build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: RENDER
+        value: "true"
+    healthCheckPath: /health
