@@ -1,58 +1,64 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import { CORS_OPTIONS, RATE_LIMIT, logger, NODE_ENV } from '@config/config';
+import { puzzleRouter } from '@controllers/puzzle.controller';
+import { CORS_OPTIONS, RATE_LIMIT } from '@config/config';
+import { logger } from '@config/config';
 
-import { handlePuzzleRequest } from '@controllers/puzzle.controller';
-
-export const createApp = (): express.Application => {
+export const createApp = () => {
   const app = express();
 
   // Security middleware
   app.use(helmet());
-  app.use(express.json());
   app.use(cors(CORS_OPTIONS));
-  app.disable('x-powered-by');
 
   // Rate limiting
-  app.use('/api', rateLimit(RATE_LIMIT));
+  app.use(rateLimit(RATE_LIMIT));
+
+  // Compression
+  app.use(compression());
+
+  // Body parsing
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true }));
 
   // Request logging
   app.use((req, res, next) => {
-    logger.info(`${req.method} ${req.path}`);
+    logger.info(`${req.method} ${req.path}`, {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+    });
     next();
   });
 
-  // Routes
-  app.get('/api/puzzle', handlePuzzleRequest);
-  app.get('/health', (req, res) => {
-    res.status(200).json({
+  // Health check endpoint
+  app.get('/health', (req: Request, res: Response) => {
+    res.json({
       status: 'healthy',
-      uptime: process.uptime(),
       timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
     });
   });
+
+  // API routes
+  app.use('/api/puzzle', puzzleRouter);
 
   // 404 handler
-  app.use((req, res) => {
+  app.use('*', (req: Request, res: Response) => {
     res.status(404).json({
-      error: 'Not Found',
-      path: req.path,
+      error: 'Route not found',
+      path: req.originalUrl,
     });
   });
 
-  // Error handler
-  app.use((err: Error, req: express.Request, res: express.Response) => {
-    logger.error('Error:', {
-      path: req.path,
-      error: err.message,
-      stack: NODE_ENV === 'development' ? err.stack : undefined,
-    });
-
+  // Global error handler
+  app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
+    logger.error('Unhandled error:', err);
     res.status(500).json({
-      error: 'Internal Server Error',
-      ...(NODE_ENV === 'development' && { details: err.message }),
+      error: 'Internal server error',
+      timestamp: new Date().toISOString(),
     });
   });
 
