@@ -1,4 +1,4 @@
-package com.aiswarya.wordconnections.ui.theme
+package com.aiswarya.wordconnections.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
