@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
@@ -67,9 +68,17 @@ fun GameScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+        ) {
+            // Header with proper spacing
             WordConnectionsGameHeader(
                 remainingAttempts = remainingAttempts,
                 solvedGroups = solvedGroups.size,
@@ -77,89 +86,91 @@ fun GameScreen(
                 gameStatus = gameStatus,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = if (isLandscape) 16.dp else 12.dp, vertical = 8.dp)
+                    .padding(top = 16.dp)
             )
-        },
-        bottomBar = {
-            if (gameStatus == GameStatus.PLAYING || gameStatus == GameStatus.WON || gameStatus == GameStatus.LOST) {
-                WordConnectionsGameControls(
-                    selectedCount = selectedWords.size,
-                    onSubmit = { viewModel.submitGuess() },
-                    onShuffle = { viewModel.shuffleWords() },
-                    onClear = { viewModel.clearSelection() },
-                    onNewGame = { viewModel.newGame() },
-                    onRestart = { viewModel.restartGame() },
-                    enabled = gameStatus == GameStatus.PLAYING,
-                    showGameControls = gameStatus == GameStatus.PLAYING,
-                    gameStatus = gameStatus,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = if (isLandscape) 16.dp else 12.dp, vertical = 8.dp)
-                )
-            }
-        },
-        snackbarHost = {
-            errorMessage?.let {
-                WordConnectionsErrorMessage(
-                    message = it,
-                    onDismiss = { viewModel.clearError() },
-                    onRetry = { viewModel.loadPuzzle() },
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                )
-            }
-        }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .offset(x = shakeOffset.value.dp)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = if (isLandscape) 16.dp else 12.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                puzzle?.let {
-                    WordConnectionsSolvedGroups(
-                        groups = solvedGroups,
-                        modifier = Modifier.fillMaxWidth()
-                    )
 
-                    WordConnectionsWordGrid(
-                        words = puzzle.words,
-                        selectedWords = selectedWords,
-                        solvedGroups = solvedGroups,
-                        onWordToggle = { viewModel.toggleWordSelection(it) },
-                        enabled = gameStatus == GameStatus.PLAYING,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f) // Proper weight in ColumnScope
-                    )
+            // Main content area with proper weight
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .offset(x = shakeOffset.value.dp)
+            ) {
+                if (puzzle != null) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        WordConnectionsSolvedGroups(
+                            groups = solvedGroups,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        WordConnectionsWordGrid(
+                            words = puzzle.words,
+                            selectedWords = selectedWords,
+                            solvedGroups = solvedGroups,
+                            onWordToggle = { viewModel.toggleWordSelection(it) },
+                            enabled = gameStatus == GameStatus.PLAYING,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        )
+                    }
                 }
             }
 
-            if (isLoading) {
-                WordConnectionsLoadingState(
-                    message = "Loading puzzle...",
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            // Footer controls with proper spacing
+            WordConnectionsGameControls(
+                selectedCount = selectedWords.size,
+                onSubmit = { viewModel.submitGuess() },
+                onShuffle = { viewModel.shuffleWords() },
+                onClear = { viewModel.clearSelection() },
+                onNewGame = { viewModel.newGame() },
+                onRestart = { viewModel.restartGame() },
+                enabled = gameStatus == GameStatus.PLAYING,
+                showGameControls = gameStatus == GameStatus.PLAYING,
+                gameStatus = gameStatus,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
+        }
 
-            if (gameStatus == GameStatus.WON) {
-                WordConnectionsVictoryOverlay(
-                    onPlayAgain = { viewModel.newGame() },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+        // Overlays
+        if (isLoading) {
+            WordConnectionsLoadingState(
+                message = "Loading puzzle...",
+                modifier = Modifier.fillMaxSize()
+            )
+        }
 
-            if (gameStatus == GameStatus.LOST) {
-                WordConnectionsCompletionState(
-                    message = "Game Over! Try again?",
-                    onRetry = { viewModel.restartGame() },
-                    modifier = Modifier.fillMaxSize()
+        if (gameStatus == GameStatus.WON) {
+            WordConnectionsVictoryOverlay(
+                onPlayAgain = { viewModel.newGame() },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        if (gameStatus == GameStatus.LOST) {
+            WordConnectionsCompletionState(
+                message = "Game Over! Try again?",
+                onRetry = { viewModel.restartGame() },
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        errorMessage?.let {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                WordConnectionsErrorMessage(
+                    message = it,
+                    onDismiss = { viewModel.clearError() },
+                    onRetry = { viewModel.loadPuzzle() }
                 )
             }
         }

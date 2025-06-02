@@ -19,8 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.aiswarya.wordconnections.domain.model.Difficulty
 import com.aiswarya.wordconnections.domain.model.PuzzleGroup
 
 @Composable
@@ -35,47 +35,28 @@ fun WordConnectionsWordGrid(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     val screenWidth = configuration.screenWidthDp.dp
-    val minCellWidth = (screenWidth / 4.5f).coerceAtLeast(80.dp)
-    val maxCellWidth = (screenWidth / 3.5f).coerceAtMost(if (isLandscape) 180.dp else 200.dp)
+    val cardSize = (screenWidth - 24.dp) / 4 // Slightly larger cards for better text fit
 
     val solvedWords = remember(solvedGroups) { solvedGroups.flatMap { it.words }.toSet() }
-    val density = LocalDensity.current
-
-
-    // Calculate optimal card size (4x4 grid with spacing)
-    val cardSize = remember(screenWidth, isLandscape) {
-        (screenWidth - 32.dp) / 4 // 32dp accounts for padding (16dp) and spacing (8dp * 3)
-    }
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2), // Fixed 4x4 grid like NYT Connections
-        modifier = modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        contentPadding = PaddingValues(if (isLandscape) 16.dp else 12.dp)
+        columns = GridCells.Fixed(4),
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        contentPadding = PaddingValues(if (isLandscape) 8.dp else 6.dp)
     ) {
         items(words, key = { it }) { word ->
             val isSelected = word in selectedWords
             val isSolved = word in solvedWords
             val groupColor = solvedGroups.find { word in it.words }?.let {
                 when (it.difficulty) {
-                    com.aiswarya.wordconnections.domain.model.Difficulty.YELLOW -> Color(0xFFFBC02D)
-                    com.aiswarya.wordconnections.domain.model.Difficulty.GREEN -> Color(0xFF4CAF50)
-                    com.aiswarya.wordconnections.domain.model.Difficulty.BLUE -> Color(0xFF0288D1)
-                    com.aiswarya.wordconnections.domain.model.Difficulty.PURPLE -> Color(0xFF7B1FA2)
+                    Difficulty.YELLOW -> Color(0xFFFBC02D)
+                    Difficulty.GREEN -> Color(0xFF4CAF50)
+                    Difficulty.BLUE -> Color(0xFF0288D1)
+                    Difficulty.PURPLE -> Color(0xFF7B1FA2)
                 }
             }
-
-            // Estimate width based on word length and font size
-            val fontSize = when (word.length) {
-                in 0..6 -> 22f
-                in 7..12 -> 20f
-                in 13..18 -> 18f
-                else -> 14f // Reduced for very long words
-            }
-            val textWidth = with(density) { (word.length * fontSize * 0.8f).toDp() } // Increased factor for uppercase
-            val cardWidth = (textWidth + 32.dp).coerceIn(minCellWidth, maxCellWidth) // Add padding buffer
 
             AnimatedVisibility(
                 visible = true,
@@ -92,10 +73,7 @@ fun WordConnectionsWordGrid(
                     groupColor = groupColor,
                     onClick = { onWordToggle(word) },
                     enabled = enabled && !isSolved,
-                    modifier = Modifier.size(cardSize) // Uniform square size
-//                    modifier = Modifier
-//                        .width(cardWidth)
-//                        .sizeIn(minHeight = 80.dp)
+                    modifier = Modifier.size(cardSize)
                 )
             }
         }

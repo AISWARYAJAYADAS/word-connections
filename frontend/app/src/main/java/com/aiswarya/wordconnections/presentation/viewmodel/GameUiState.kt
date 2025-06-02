@@ -14,5 +14,5 @@ data class GameUiState(
 )
 
 enum class GameStatus {
-    LOADING, PLAYING, WON, LOST
+    PLAYING, WON, LOST
 }

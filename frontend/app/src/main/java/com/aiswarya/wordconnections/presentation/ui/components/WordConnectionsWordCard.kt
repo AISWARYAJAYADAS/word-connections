@@ -30,10 +30,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -54,11 +56,10 @@ fun WordConnectionsWordCard(
     var scale by remember { mutableFloatStateOf(1f) }
     val haptic = LocalHapticFeedback.current
 
-    // Pulse animation for selection
     LaunchedEffect(isPressed, isSelected) {
         scale = when {
-            isPressed -> 0.92f
-            isSelected -> 1.05f // Slight pulse for selected state
+            isPressed -> 0.95f
+            isSelected -> 1.03f
             else -> 1f
         }
         if (isPressed) {
@@ -72,36 +73,29 @@ fun WordConnectionsWordCard(
             isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
             else -> MaterialTheme.colorScheme.surfaceContainer
         },
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 200),
         label = "background_color"
     )
 
     val textColor by animateColorAsState(
         targetValue = when {
-            isSolved -> Color.White.copy(alpha = 0.95f)
+            isSolved -> Color.White
             isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
             else -> MaterialTheme.colorScheme.onSurface
         },
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = tween(durationMillis = 200),
         label = "text_color"
     )
-
-    // Dynamic font size with higher minimum
-    val fontSize = with(LocalDensity.current) {
-        when (word.length) {
-            in 0..6 -> 22.sp
-            in 7..12 -> 20.sp
-            in 13..18 -> 18.sp
-            else -> 16.sp // Increased minimum size
-        }
-    }
 
     Box(
         modifier = modifier
             .padding(4.dp)
             .scale(scale)
-            .clip(RoundedCornerShape(12.dp))
-            .shadow(elevation = if (isSelected || isSolved) 8.dp else 4.dp, shape = RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
+            .shadow(
+                elevation = if (isSelected || isSolved) 6.dp else 2.dp,
+                shape = RoundedCornerShape(8.dp)
+            )
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
@@ -116,62 +110,101 @@ fun WordConnectionsWordCard(
                     bounded = true,
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                 ),
-                enabled = enabled
-            ) { onClick() }
+                enabled = enabled,
+                onClick = onClick
+            )
             .border(
-                width = if (isSelected) 3.dp else 0.dp,
+                width = if (isSelected) 2.dp else 0.dp,
                 brush = Brush.linearGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.primary,
                         MaterialTheme.colorScheme.secondary
                     )
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(8.dp)
             ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = word.uppercase(),
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontSize = fontSize,
-                letterSpacing = 0.5.sp
-            ),
+        OptimizedWordText(
+            text = word,
             fontWeight = if (isSolved) FontWeight.Bold else FontWeight.SemiBold,
             color = textColor,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 20.dp), // Increased padding
-           // contentDescription = "Word: $word"
+                .padding(horizontal = 6.dp, vertical = 10.dp) // Reduced padding
         )
     }
 }
 
+@Composable
+private fun OptimizedWordText(
+    text: String,
+    fontWeight: FontWeight?,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val displayText = remember(text) {
+        when {
+            text.length <= 10 -> text.uppercase()
+            " -".any { it in text } -> text
+                .replace(" -", "-\n")
+                .replace(" ", "\n")
+                .uppercase()
+            else -> text.uppercase()
+        }
+    }
+
+    Text(
+        text = displayText,
+        style = MaterialTheme.typography.titleMedium.copy(
+            fontSize = 12.sp,  // Reduced from 14.sp
+            lineHeight = 14.sp, // Tight line height (was 18.sp)
+            letterSpacing = 0.1.sp, // Reduced from 0.15.sp
+            platformStyle = PlatformTextStyle(
+                includeFontPadding = false
+            )
+        ),
+        fontWeight = fontWeight,
+        color = color,
+        textAlign = TextAlign.Center,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
-fun PreviewWordCard() {
+fun PreviewWordConnectionsWordCard() {
     WordConnectionsTheme {
         Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             WordConnectionsWordCard(
-                word = "To",
+                word = "SUN",
                 isSelected = false,
                 onClick = {}
             )
             WordConnectionsWordCard(
-                word = "Computer",
+                word = "MOTHER-IN-LAW",
                 isSelected = true,
                 onClick = {}
             )
             WordConnectionsWordCard(
-                word = "Supercalifragilistic",
-                isSelected = true,
+                word = "ICE CREAM",
+                isSolved = false,
+                onClick = {},
+                isSelected = true
+            )
+            WordConnectionsWordCard(
+                word = "EXTRAORDINARY",
                 isSolved = true,
-                groupColor = Color(0xFF4CAF50),
-                onClick = {}
+                groupColor = Color(0xFFFBC02D),
+                onClick = {},
+                isSelected = true
             )
         }
     }
