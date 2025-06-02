@@ -1,17 +1,25 @@
 package com.aiswarya.wordconnections.presentation.screens
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,149 +38,185 @@ import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsSo
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsVictoryOverlay
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsWordGrid
 import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
+import com.aiswarya.wordconnections.presentation.viewmodel.GameUiState
 import com.aiswarya.wordconnections.presentation.viewmodel.GameViewModel
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun GameScreen(
     viewModel: GameViewModel,
+    windowSizeClass: WindowSizeClass,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val puzzle = uiState.puzzle
-    val selectedWords = uiState.selectedWords
-    val solvedGroups = uiState.solvedGroups
-    val remainingAttempts = uiState.remainingAttempts
-    val gameStatus = uiState.gameStatus
-    val isLoading = uiState.isLoading
-    val errorMessage = uiState.errorMessage
     val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isTablet = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
 
-    // Shake animation for incorrect guess
-    val shakeOffset = remember { Animatable(0f) }
-    LaunchedEffect(remainingAttempts) {
-        if (remainingAttempts < 4 && gameStatus == GameStatus.PLAYING) {
-            shakeOffset.animateTo(
-                targetValue = 0f,
-                animationSpec = keyframes {
-                    durationMillis = 400
-                    10f at 50
-                    -10f at 100
-                    8f at 150
-                    -8f at 200
-                    6f at 250
-                    -6f at 300
-                    0f at 350
-                }
-            )
-        }
+    // Adaptive padding
+    val paddingValues = when {
+        isTablet -> PaddingValues(24.dp)
+        isLandscape -> PaddingValues(16.dp)
+        else -> PaddingValues(12.dp)
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .systemBarsPadding()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
-            // Header with proper spacing
-            WordConnectionsGameHeader(
-                remainingAttempts = remainingAttempts,
-                solvedGroups = solvedGroups.size,
-                totalGroups = 4,
-                gameStatus = gameStatus,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 16.dp)
+        if (isLandscape || isTablet) {
+            LandscapeTabletLayout(
+                uiState = uiState,
+                viewModel = viewModel,
+                paddingValues = paddingValues
             )
-
-            // Main content area with proper weight
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .offset(x = shakeOffset.value.dp)
-            ) {
-                if (puzzle != null) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        WordConnectionsSolvedGroups(
-                            groups = solvedGroups,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        WordConnectionsWordGrid(
-                            words = puzzle.words,
-                            selectedWords = selectedWords,
-                            solvedGroups = solvedGroups,
-                            onWordToggle = { viewModel.toggleWordSelection(it) },
-                            enabled = gameStatus == GameStatus.PLAYING,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    }
-                }
-            }
-
-            // Footer controls with proper spacing
-            WordConnectionsGameControls(
-                selectedCount = selectedWords.size,
-                onSubmit = { viewModel.submitGuess() },
-                onShuffle = { viewModel.shuffleWords() },
-                onClear = { viewModel.clearSelection() },
-                onNewGame = { viewModel.newGame() },
-                onRestart = { viewModel.restartGame() },
-                enabled = gameStatus == GameStatus.PLAYING,
-                showGameControls = gameStatus == GameStatus.PLAYING,
-                gameStatus = gameStatus,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+        } else {
+            PortraitMobileLayout(
+                uiState = uiState,
+                viewModel = viewModel,
+                paddingValues = paddingValues
             )
         }
 
         // Overlays
-        if (isLoading) {
+        if (uiState.isLoading) {
             WordConnectionsLoadingState(
                 message = "Loading puzzle...",
                 modifier = Modifier.fillMaxSize()
             )
         }
 
-        if (gameStatus == GameStatus.WON) {
+        uiState.errorMessage?.let { error ->
+            WordConnectionsErrorMessage(
+                message = error,
+                onDismiss = { viewModel.clearError() },
+                onRetry = { viewModel.loadPuzzle() },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+        }
+
+        if (uiState.gameStatus == GameStatus.WON) {
             WordConnectionsVictoryOverlay(
                 onPlayAgain = { viewModel.newGame() },
                 modifier = Modifier.fillMaxSize()
             )
         }
 
-        if (gameStatus == GameStatus.LOST) {
+        if (uiState.gameStatus == GameStatus.LOST) {
             WordConnectionsCompletionState(
                 message = "Game Over! Try again?",
                 onRetry = { viewModel.restartGame() },
                 modifier = Modifier.fillMaxSize()
             )
         }
+    }
+}
 
-        errorMessage?.let {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 80.dp),
-                contentAlignment = Alignment.BottomCenter
-            ) {
-                WordConnectionsErrorMessage(
-                    message = it,
-                    onDismiss = { viewModel.clearError() },
-                    onRetry = { viewModel.loadPuzzle() }
-                )
-            }
+@Composable
+private fun LandscapeTabletLayout(
+    uiState: GameUiState,
+    viewModel: GameViewModel,
+    paddingValues: PaddingValues
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Game Board (70% width)
+        Column(
+            modifier = Modifier.weight(2f),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            WordConnectionsGameHeader(
+                remainingAttempts = uiState.remainingAttempts,
+                solvedGroups = uiState.solvedGroups.size,
+                totalGroups = 4,
+                gameStatus = uiState.gameStatus,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            WordConnectionsWordGrid(
+                words = uiState.puzzle?.words ?: emptyList(),
+                selectedWords = uiState.selectedWords,
+                solvedGroups = uiState.solvedGroups,
+                onWordToggle = viewModel::toggleWordSelection,
+                enabled = uiState.gameStatus == GameStatus.PLAYING,
+                modifier = Modifier.weight(1f)
+            )
+
+            WordConnectionsGameControls(
+                selectedCount = uiState.selectedWords.size,
+                onSubmit = viewModel::submitGuess,
+                onShuffle = viewModel::shuffleWords,
+                onClear = viewModel::clearSelection,
+                onNewGame = { viewModel.newGame() },
+                onRestart = { viewModel.restartGame() },
+                enabled = uiState.gameStatus == GameStatus.PLAYING,
+                showGameControls = true,
+                gameStatus = uiState.gameStatus,
+                modifier = Modifier.fillMaxWidth()
+            )
         }
+
+        // Solved Groups (30% width)
+        WordConnectionsSolvedGroups(
+            groups = uiState.solvedGroups,
+            modifier = Modifier
+                .widthIn(max = 300.dp)
+                .padding(start = 16.dp)
+        )
+    }
+}
+
+@Composable
+private fun PortraitMobileLayout(
+    uiState: GameUiState,
+    viewModel: GameViewModel,
+    paddingValues: PaddingValues
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        WordConnectionsGameHeader(
+            remainingAttempts = uiState.remainingAttempts,
+            solvedGroups = uiState.solvedGroups.size,
+            totalGroups = 4,
+            gameStatus = uiState.gameStatus,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        WordConnectionsSolvedGroups(
+            groups = uiState.solvedGroups,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        WordConnectionsWordGrid(
+            words = uiState.puzzle?.words ?: emptyList(),
+            selectedWords = uiState.selectedWords,
+            solvedGroups = uiState.solvedGroups,
+            onWordToggle = viewModel::toggleWordSelection,
+            enabled = uiState.gameStatus == GameStatus.PLAYING,
+            modifier = Modifier.weight(1f)
+        )
+
+        WordConnectionsGameControls(
+            selectedCount = uiState.selectedWords.size,
+            onSubmit = viewModel::submitGuess,
+            onShuffle = viewModel::shuffleWords,
+            onClear = viewModel::clearSelection,
+            onNewGame = { viewModel.newGame() },
+            onRestart = { viewModel.restartGame() },
+            enabled = uiState.gameStatus == GameStatus.PLAYING,
+            showGameControls = true,
+            gameStatus = uiState.gameStatus,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

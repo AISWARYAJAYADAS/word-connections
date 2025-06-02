@@ -1,5 +1,6 @@
 package com.aiswarya.wordconnections.presentation.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -33,24 +34,30 @@ fun WordConnectionsWordGrid(
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidth = configuration.screenWidthDp.dp
-    val cardSize = (screenWidth - 24.dp) / 4 // Slightly larger cards for better text fit
 
-    val solvedWords = remember(solvedGroups) { solvedGroups.flatMap { it.words }.toSet() }
+    // Dynamic columns based on screen size
+    val columns = when {
+        configuration.screenWidthDp > 900 -> 6  // Tablets
+        isLandscape -> 5  // Landscape phones
+        else -> 4  // Default (Portrait)
+    }
+
+    // Calculate card size dynamically
+    val cardSize = (screenWidth - (16.dp * (columns + 1))) / columns
 
     LazyVerticalGrid(
-        columns = GridCells.Fixed(4),
-        modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        contentPadding = PaddingValues(if (isLandscape) 8.dp else 6.dp)
+        columns = GridCells.Fixed(columns),
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(16.dp)
     ) {
         items(words, key = { it }) { word ->
-            val isSelected = word in selectedWords
-            val isSolved = word in solvedWords
-            val groupColor = solvedGroups.find { word in it.words }?.let {
-                when (it.difficulty) {
+            val isSolved = solvedGroups.any { group -> word in group.words }
+            val groupColor = solvedGroups.find { word in it.words }?.let { group ->
+                when (group.difficulty) {
                     Difficulty.YELLOW -> Color(0xFFFBC02D)
                     Difficulty.GREEN -> Color(0xFF4CAF50)
                     Difficulty.BLUE -> Color(0xFF0288D1)
@@ -58,24 +65,15 @@ fun WordConnectionsWordGrid(
                 }
             }
 
-            AnimatedVisibility(
-                visible = true,
-                enter = scaleIn(
-                    spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)
-                ) + fadeIn(),
-                exit = scaleOut() + fadeOut(),
-                label = "WordCardAnimation"
-            ) {
-                WordConnectionsWordCard(
-                    word = word,
-                    isSelected = isSelected,
-                    isSolved = isSolved,
-                    groupColor = groupColor,
-                    onClick = { onWordToggle(word) },
-                    enabled = enabled && !isSolved,
-                    modifier = Modifier.size(cardSize)
-                )
-            }
+            WordConnectionsWordCard(
+                word = word,
+                isSelected = selectedWords.contains(word),
+                isSolved = isSolved,
+                groupColor = groupColor,
+                onClick = { onWordToggle(word) },
+                enabled = enabled && !isSolved,
+                modifier = Modifier.size(cardSize)
+            )
         }
     }
 }

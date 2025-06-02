@@ -1,38 +1,34 @@
 package com.aiswarya.wordconnections.presentation.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.PlatformTextStyle
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,158 +49,91 @@ fun WordConnectionsWordCard(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    var scale by remember { mutableFloatStateOf(1f) }
     val haptic = LocalHapticFeedback.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    LaunchedEffect(isPressed, isSelected) {
-        scale = when {
+    // Animations
+    val scale by animateFloatAsState(
+        targetValue = when {
             isPressed -> 0.95f
-            isSelected -> 1.03f
+            isSelected -> 1.05f
             else -> 1f
-        }
-        if (isPressed) {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        }
-    }
+        },
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 800f)
+    )
 
     val backgroundColor by animateColorAsState(
         targetValue = when {
             isSolved && groupColor != null -> groupColor
-            isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.9f)
-            else -> MaterialTheme.colorScheme.surfaceContainer
+            isSelected -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceVariant
         },
-        animationSpec = tween(durationMillis = 200),
-        label = "background_color"
+        animationSpec = tween(300)
     )
 
     val textColor by animateColorAsState(
-        targetValue = when {
-            isSolved -> Color.White
-            isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
-            else -> MaterialTheme.colorScheme.onSurface
-        },
-        animationSpec = tween(durationMillis = 200),
-        label = "text_color"
+        targetValue = if (isSolved) Color.White else MaterialTheme.colorScheme.onSurface,
+        animationSpec = tween(300)
     )
 
     Box(
         modifier = modifier
-            .padding(4.dp)
-            .scale(scale)
-            .clip(RoundedCornerShape(8.dp))
             .shadow(
-                elevation = if (isSelected || isSolved) 6.dp else 2.dp,
-                shape = RoundedCornerShape(8.dp)
+                elevation = if (isSelected) 8.dp else 2.dp,
+                shape = RoundedCornerShape(12.dp)
             )
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        backgroundColor,
-                        backgroundColor.copy(alpha = 0.8f)
-                    )
-                )
-            )
+            .scale(scale)
+            .clip(RoundedCornerShape(12.dp))
             .clickable(
                 interactionSource = interactionSource,
                 indication = ripple(
                     bounded = true,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+                    color = MaterialTheme.colorScheme.primary
                 ),
                 enabled = enabled,
-                onClick = onClick
+                onClick = {
+                    if (enabled) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onClick()
+                    }
+                }
             )
+            .background(backgroundColor)
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.secondary
-                    )
-                ),
-                shape = RoundedCornerShape(8.dp)
+                color = MaterialTheme.colorScheme.primary,
+                shape = RoundedCornerShape(12.dp)
             ),
         contentAlignment = Alignment.Center
     ) {
-        OptimizedWordText(
-            text = word,
-            fontWeight = if (isSolved) FontWeight.Bold else FontWeight.SemiBold,
+        Text(
+            text = word.uppercase(),
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontSize = if (isLandscape) 10.sp else 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            ),
             color = textColor,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 10.dp) // Reduced padding
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(8.dp)
         )
     }
 }
 
-@Composable
-private fun OptimizedWordText(
-    text: String,
-    fontWeight: FontWeight?,
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    val displayText = remember(text) {
-        when {
-            text.length <= 10 -> text.uppercase()
-            " -".any { it in text } -> text
-                .replace(" -", "-\n")
-                .replace(" ", "\n")
-                .uppercase()
-            else -> text.uppercase()
-        }
-    }
-
-    Text(
-        text = displayText,
-        style = MaterialTheme.typography.titleMedium.copy(
-            fontSize = 12.sp,  // Reduced from 14.sp
-            lineHeight = 14.sp, // Tight line height (was 18.sp)
-            letterSpacing = 0.1.sp, // Reduced from 0.15.sp
-            platformStyle = PlatformTextStyle(
-                includeFontPadding = false
-            )
-        ),
-        fontWeight = fontWeight,
-        color = color,
-        textAlign = TextAlign.Center,
-        maxLines = 3,
-        overflow = TextOverflow.Ellipsis,
-        modifier = modifier
-    )
-}
-
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreviewWordConnectionsWordCard() {
     WordConnectionsTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Box(modifier = Modifier.padding(16.dp)) {
             WordConnectionsWordCard(
-                word = "SUN",
-                isSelected = false,
-                onClick = {}
-            )
-            WordConnectionsWordCard(
-                word = "MOTHER-IN-LAW",
+                word = "EXAMPLE",
                 isSelected = true,
-                onClick = {}
-            )
-            WordConnectionsWordCard(
-                word = "ICE CREAM",
                 isSolved = false,
                 onClick = {},
-                isSelected = true
-            )
-            WordConnectionsWordCard(
-                word = "EXTRAORDINARY",
-                isSolved = true,
-                groupColor = Color(0xFFFBC02D),
-                onClick = {},
-                isSelected = true
+                modifier = Modifier.size(100.dp)
             )
         }
     }
