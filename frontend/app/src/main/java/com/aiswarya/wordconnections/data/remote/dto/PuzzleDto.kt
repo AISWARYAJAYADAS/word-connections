@@ -4,13 +4,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PuzzleResponseDto(
-    @SerialName("puzzleWords") val puzzleWords: List<String>,
-    @SerialName("categories") val categories: List<String>,
-    @SerialName("meta") val meta: PuzzleMetaDto
-)
-
-@Serializable
 data class EnhancedPuzzleResponseDto(
     @SerialName("puzzleWords") val puzzleWords: List<String>,
     @SerialName("categories") val categories: List<String>,
@@ -50,8 +43,4 @@ data class ValidationResponseDto(
     @SerialName("isOneAway") val isOneAway: Boolean
 )
 
-@Serializable
-data class HealthResponse(
-    @SerialName("status") val status: String,
-    @SerialName("version") val version: String
-)
+

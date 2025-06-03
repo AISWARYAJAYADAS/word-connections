@@ -5,7 +5,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.serialization.json.Json
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
@@ -21,21 +20,6 @@ import javax.inject.Singleton
 object NetworkModule {
     private const val BASE_URL = "https://word-connections-backend.onrender.com/"
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-        coerceInputValues = true
-        isLenient = true
-    }
-
-    private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)  // Increase from default 10s
-        .readTimeout(30, TimeUnit.SECONDS)     // Increase from default 10s
-        .writeTimeout(30, TimeUnit.SECONDS)    // Increase from default 10s
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
-        .build()
-
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
@@ -46,6 +30,7 @@ object NetworkModule {
             .addInterceptor(HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BASIC
             })
+            .addInterceptor(RetryInterceptor()) // Add the interceptor
             .build()
     }
 
@@ -70,9 +55,11 @@ object NetworkModule {
                 }
             }
 
-            return response ?: throw lastException ?: SocketTimeoutException("Request failed after $maxRetries attempts")
+            return response ?: throw lastException
+                ?: SocketTimeoutException("Request failed after $maxRetries attempts")
         }
     }
+
     @Provides
     @Singleton
     fun provideRetrofit(): Retrofit {

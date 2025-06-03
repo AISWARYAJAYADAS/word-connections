@@ -4,7 +4,6 @@ import com.aiswarya.wordconnections.data.local.entity.PuzzleEntity
 import com.aiswarya.wordconnections.data.local.entity.PuzzleGroupEntity
 import com.aiswarya.wordconnections.data.local.entity.PuzzleWordEntity
 import com.aiswarya.wordconnections.data.remote.dto.EnhancedPuzzleResponseDto
-import com.aiswarya.wordconnections.data.remote.dto.PuzzleResponseDto
 import com.aiswarya.wordconnections.domain.model.Difficulty
 import com.aiswarya.wordconnections.domain.model.Puzzle
 import com.aiswarya.wordconnections.domain.model.PuzzleEntities
@@ -15,18 +14,6 @@ import javax.inject.Singleton
 
 @Singleton
 class PuzzleMapper @Inject constructor() {
-
-    fun toDomain(dto: PuzzleResponseDto): Puzzle {
-        return Puzzle(
-            puzzleId = dto.meta.puzzleId,
-            title = "Puzzle ${dto.meta.puzzleId.take(4)}",
-            words = dto.puzzleWords,
-            groups = emptyList(),
-            seed = dto.meta.puzzleId.hashCode(),
-            generatedAt = dto.meta.generatedAt,
-            difficulty = "Mixed"
-        )
-    }
 
     fun toDomain(dto: EnhancedPuzzleResponseDto): Puzzle {
         return Puzzle(
