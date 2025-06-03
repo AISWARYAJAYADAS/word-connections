@@ -1,5 +1,6 @@
 package com.aiswarya.wordconnections.presentation.viewmodel
 
+import android.os.Build
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -27,6 +29,24 @@ class GameViewModel @Inject constructor(
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
     init {
+        // Restore puzzlesSolved and last reset date
+        val puzzlesSolved = savedStateHandle.get<Int>("puzzlesSolved") ?: 0
+        val lastResetDate = savedStateHandle.get<String>("lastResetDate") ?: ""
+        val today = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            LocalDate.now().toString()
+        } else {
+            TODO("VERSION.SDK_INT < O")
+        }
+
+        // Reset puzzlesSolved daily
+        if (lastResetDate != today) {
+            savedStateHandle["puzzlesSolved"] = 0
+            savedStateHandle["lastResetDate"] = today
+            _uiState.update { it.copy(puzzlesSolved = 0) }
+        } else {
+            _uiState.update { it.copy(puzzlesSolved = puzzlesSolved) }
+        }
+
         loadPuzzle()
     }
 
@@ -102,12 +122,17 @@ class GameViewModel @Inject constructor(
                 }
                 val newSolvedGroups = currentState.solvedGroups + listOfNotNull(solvedGroup)
                 val isGameWon = newSolvedGroups.size == 4
+                val newPuzzlesSolved = if (isGameWon) currentState.puzzlesSolved + 1 else currentState.puzzlesSolved
+                if (isGameWon) {
+                    savedStateHandle["puzzlesSolved"] = newPuzzlesSolved // Persist puzzlesSolved
+                }
                 currentState.copy(
                     selectedWords = emptySet(),
                     solvedGroups = newSolvedGroups,
                     remainingAttempts = result.remainingAttempts,
                     gameStatus = if (isGameWon) GameStatus.WON else GameStatus.PLAYING,
-                    isLoading = false
+                    isLoading = false,
+                    puzzlesSolved = newPuzzlesSolved
                 )
             } else {
                 val isGameLost = result.remainingAttempts <= 0
@@ -144,12 +169,13 @@ class GameViewModel @Inject constructor(
     }
 
     fun restartGame() {
-        _uiState.update { GameUiState() }
+        _uiState.update { GameUiState(puzzlesSolved = _uiState.value.puzzlesSolved) }
         loadPuzzle()
     }
 
     fun newGame(seed: Int? = null) {
-        _uiState.update { GameUiState() }
+        _uiState.update { GameUiState(puzzlesSolved = _uiState.value.puzzlesSolved) }
         loadPuzzle(seed)
     }
 }
+

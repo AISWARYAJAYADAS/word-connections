@@ -10,7 +10,8 @@ data class GameUiState(
     val remainingAttempts: Int = 4,
     val gameStatus: GameStatus = GameStatus.PLAYING,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val puzzlesSolved: Int = 0
 )
 
 enum class GameStatus {

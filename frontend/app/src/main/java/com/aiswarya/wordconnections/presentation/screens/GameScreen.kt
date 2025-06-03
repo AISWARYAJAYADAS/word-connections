@@ -1,8 +1,7 @@
 package com.aiswarya.wordconnections.presentation.screens
 
+import android.content.Intent
 import android.content.res.Configuration
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,27 +10,24 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsCompletionState
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsErrorMessage
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsGameControls
+
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsGameHeader
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsLoadingState
 import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsSolvedGroups
@@ -41,7 +37,6 @@ import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
 import com.aiswarya.wordconnections.presentation.viewmodel.GameUiState
 import com.aiswarya.wordconnections.presentation.viewmodel.GameViewModel
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun GameScreen(
     viewModel: GameViewModel,
@@ -52,6 +47,7 @@ fun GameScreen(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val isTablet = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+    val context = LocalContext.current
 
     // Adaptive padding
     val paddingValues = when {
@@ -99,7 +95,17 @@ fun GameScreen(
 
         if (uiState.gameStatus == GameStatus.WON) {
             WordConnectionsVictoryOverlay(
+                puzzlesSolved = uiState.puzzlesSolved,
                 onPlayAgain = { viewModel.newGame() },
+                onShare = {
+                    val shareText = "I solved ${uiState.puzzlesSolved} puzzles in Word Connections today! 🎉 #WordConnections"
+                    val intent = Intent().apply {
+                        action = Intent.ACTION_SEND
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                        type = "text/plain"
+                    }
+                    context.startActivity(Intent.createChooser(intent, "Share your victory!"))
+                },
                 modifier = Modifier.fillMaxSize()
             )
         }

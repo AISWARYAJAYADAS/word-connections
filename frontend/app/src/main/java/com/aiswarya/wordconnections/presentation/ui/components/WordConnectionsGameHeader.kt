@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun WordConnectionsGameHeader(
     remainingAttempts: Int,
@@ -128,8 +127,8 @@ fun WordConnectionsGameHeader(
                             else -> "$remainingAttempts"
                         },
                         transitionSpec = {
-                            slideInVertically { height -> height } + fadeIn() with
-                                    slideOutVertically { height -> -height } + fadeOut()
+                            (slideInVertically { height -> height } + fadeIn()).togetherWith(
+                                slideOutVertically { height -> -height } + fadeOut())
                         }
                     ) { targetCount ->
                         Text(

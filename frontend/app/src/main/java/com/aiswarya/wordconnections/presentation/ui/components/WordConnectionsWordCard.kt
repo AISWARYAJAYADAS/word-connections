@@ -39,13 +39,13 @@ import com.aiswarya.wordconnections.presentation.ui.theme.WordConnectionsTheme
 
 @Composable
 fun WordConnectionsWordCard(
+    modifier: Modifier = Modifier,
     word: String,
     isSelected: Boolean,
     isSolved: Boolean = false,
     groupColor: Color? = null,
     onClick: () -> Unit,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
