@@ -3,16 +3,7 @@ package com.aiswarya.wordconnections.presentation.screens
 import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -24,15 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsCompletionState
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsErrorMessage
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsGameControls
-
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsGameHeader
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsLoadingState
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsSolvedGroups
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsVictoryOverlay
-import com.aiswarya.wordconnections.presentation.ui.components.WordConnectionsWordGrid
+import com.aiswarya.wordconnections.presentation.ui.components.*
 import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
 import com.aiswarya.wordconnections.presentation.viewmodel.GameUiState
 import com.aiswarya.wordconnections.presentation.viewmodel.GameViewModel
@@ -49,7 +32,6 @@ fun GameScreen(
     val isTablet = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
     val context = LocalContext.current
 
-    // Adaptive padding
     val paddingValues = when {
         isTablet -> PaddingValues(24.dp)
         isLandscape -> PaddingValues(16.dp)
@@ -63,20 +45,11 @@ fun GameScreen(
             .systemBarsPadding()
     ) {
         if (isLandscape || isTablet) {
-            LandscapeTabletLayout(
-                uiState = uiState,
-                viewModel = viewModel,
-                paddingValues = paddingValues
-            )
+            LandscapeTabletLayout(uiState, viewModel, paddingValues)
         } else {
-            PortraitMobileLayout(
-                uiState = uiState,
-                viewModel = viewModel,
-                paddingValues = paddingValues
-            )
+            PortraitMobileLayout(uiState, viewModel, paddingValues)
         }
 
-        // Overlays
         if (uiState.isLoading) {
             WordConnectionsLoadingState(
                 message = "Loading puzzle...",
@@ -99,8 +72,7 @@ fun GameScreen(
                 onPlayAgain = { viewModel.newGame() },
                 onShare = {
                     val shareText = "I solved ${uiState.puzzlesSolved} puzzles in Word Connections today! 🎉 #WordConnections"
-                    val intent = Intent().apply {
-                        action = Intent.ACTION_SEND
+                    val intent = Intent(Intent.ACTION_SEND).apply {
                         putExtra(Intent.EXTRA_TEXT, shareText)
                         type = "text/plain"
                     }
@@ -132,7 +104,6 @@ private fun LandscapeTabletLayout(
             .padding(paddingValues),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Game Board (70% width)
         Column(
             modifier = Modifier.weight(2f),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -144,7 +115,6 @@ private fun LandscapeTabletLayout(
                 gameStatus = uiState.gameStatus,
                 modifier = Modifier.fillMaxWidth()
             )
-
             WordConnectionsWordGrid(
                 words = uiState.puzzle?.words ?: emptyList(),
                 selectedWords = uiState.selectedWords,
@@ -153,8 +123,8 @@ private fun LandscapeTabletLayout(
                 enabled = uiState.gameStatus == GameStatus.PLAYING,
                 modifier = Modifier.weight(1f)
             )
-
             WordConnectionsGameControls(
+                modifier = Modifier.fillMaxWidth(),
                 selectedCount = uiState.selectedWords.size,
                 onSubmit = viewModel::submitGuess,
                 onShuffle = viewModel::shuffleWords,
@@ -162,13 +132,9 @@ private fun LandscapeTabletLayout(
                 onNewGame = { viewModel.newGame() },
                 onRestart = { viewModel.restartGame() },
                 enabled = uiState.gameStatus == GameStatus.PLAYING,
-                showGameControls = true,
-                gameStatus = uiState.gameStatus,
-                modifier = Modifier.fillMaxWidth()
+                showGameControls = true
             )
         }
-
-        // Solved Groups (30% width)
         WordConnectionsSolvedGroups(
             groups = uiState.solvedGroups,
             modifier = Modifier
@@ -197,12 +163,10 @@ private fun PortraitMobileLayout(
             gameStatus = uiState.gameStatus,
             modifier = Modifier.fillMaxWidth()
         )
-
         WordConnectionsSolvedGroups(
             groups = uiState.solvedGroups,
             modifier = Modifier.fillMaxWidth()
         )
-
         WordConnectionsWordGrid(
             words = uiState.puzzle?.words ?: emptyList(),
             selectedWords = uiState.selectedWords,
@@ -211,8 +175,8 @@ private fun PortraitMobileLayout(
             enabled = uiState.gameStatus == GameStatus.PLAYING,
             modifier = Modifier.weight(1f)
         )
-
         WordConnectionsGameControls(
+            modifier = Modifier.fillMaxWidth(),
             selectedCount = uiState.selectedWords.size,
             onSubmit = viewModel::submitGuess,
             onShuffle = viewModel::shuffleWords,
@@ -220,9 +184,7 @@ private fun PortraitMobileLayout(
             onNewGame = { viewModel.newGame() },
             onRestart = { viewModel.restartGame() },
             enabled = uiState.gameStatus == GameStatus.PLAYING,
-            showGameControls = true,
-            gameStatus = uiState.gameStatus,
-            modifier = Modifier.fillMaxWidth()
+            showGameControls = true
         )
     }
 }

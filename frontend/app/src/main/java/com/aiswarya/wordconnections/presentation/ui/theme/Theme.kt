@@ -2,7 +2,11 @@ package com.aiswarya.wordconnections.presentation.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
+import androidx.compose.material3.Typography
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
@@ -14,19 +18,19 @@ import androidx.compose.ui.unit.sp
 import com.aiswarya.wordconnections.R
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF1E88E5), // Vibrant Blue
+    primary = Color(0xFF1E88E5),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFE3F2FD), // Light Blue
+    primaryContainer = Color(0xFFE3F2FD),
     onPrimaryContainer = Color(0xFF0D47A1),
-    secondary = Color(0xFF43A047), // Green
+    secondary = Color(0xFF43A047),
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFC8E6C9), // Light Green
+    secondaryContainer = Color(0xFFC8E6C9),
     onSecondaryContainer = Color(0xFF1B5E20),
-    tertiary = Color(0xFF7B1FA2), // Purple
+    tertiary = Color(0xFF7B1FA2),
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFE1BEE7), // Light Purple
+    tertiaryContainer = Color(0xFFE1BEE7),
     onTertiaryContainer = Color(0xFF4A0072),
-    background = Color(0xFFF8FAFC), // Soft White
+    background = Color(0xFFF8FAFC),
     onBackground = Color(0xFF1A1C1E),
     surface = Color.White,
     onSurface = Color(0xFF1A1C1E),
@@ -40,15 +44,15 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF64B5F6), // Light Blue
+    primary = Color(0xFF64B5F6),
     onPrimary = Color(0xFF0D47A1),
     primaryContainer = Color(0xFF1976D2),
     onPrimaryContainer = Color(0xFFE3F2FD),
-    secondary = Color(0xFF81C784), // Light Green
+    secondary = Color(0xFF81C784),
     onSecondary = Color(0xFF1B5E20),
     secondaryContainer = Color(0xFF388E3C),
     onSecondaryContainer = Color(0xFFC8E6C9),
-    tertiary = Color(0xFFCE93D8), // Light Purple
+    tertiary = Color(0xFFCE93D8),
     onTertiary = Color(0xFF4A0072),
     tertiaryContainer = Color(0xFF7B1FA2),
     onTertiaryContainer = Color(0xFFE1BEE7),
@@ -65,67 +69,23 @@ private val DarkColorScheme = darkColorScheme(
     outline = Color(0xFF78909C)
 )
 
-private val Poppins = FontFamily(
+val Poppins = FontFamily(
     Font(R.font.poppins_regular, FontWeight.Normal),
     Font(R.font.poppins_medium, FontWeight.Medium),
+    Font(R.font.poppins_semibold, FontWeight.SemiBold),
     Font(R.font.poppins_bold, FontWeight.Bold)
 )
 
 private val AppTypography = Typography(
-    displayLarge = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Bold,
-        fontSize = 36.sp,
-        lineHeight = 44.sp
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Bold,
-        fontSize = 32.sp,
-        lineHeight = 40.sp
-    ),
-    headlineMedium = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp
-    ),
-    titleLarge = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-        lineHeight = 28.sp
-    ),
-    titleMedium = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp
-    ),
-    bodyLarge = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
-    ),
-    labelLarge = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp
-    ),
-    labelMedium = TextStyle(
-        fontFamily = Poppins,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp
-    )
+    displayLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 36.sp, lineHeight = 44.sp),
+    headlineLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Bold, fontSize = 32.sp, lineHeight = 40.sp),
+    headlineMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.SemiBold, fontSize = 28.sp, lineHeight = 36.sp),
+    titleLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 22.sp, lineHeight = 28.sp),
+    titleMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 16.sp, lineHeight = 24.sp),
+    bodyLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 16.sp, lineHeight = 24.sp),
+    bodyMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Normal, fontSize = 14.sp, lineHeight = 20.sp),
+    labelLarge = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 14.sp, lineHeight = 20.sp),
+    labelMedium = TextStyle(fontFamily = Poppins, fontWeight = FontWeight.Medium, fontSize = 12.sp, lineHeight = 16.sp)
 )
 
 @Composable

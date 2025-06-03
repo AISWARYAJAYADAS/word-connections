@@ -10,19 +10,32 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
@@ -47,7 +60,7 @@ fun WordConnectionsErrorMessage(
 
     if (showError) {
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.6f))
         ) {
@@ -115,5 +128,66 @@ fun WordConnectionsErrorMessage(
                 }
             }
         }
+    }
+}
+
+// Preview parameter provider for different error messages
+class ErrorMessageProvider : PreviewParameterProvider<String> {
+    override val values = sequenceOf(
+        "Failed to load puzzle",
+        "Network connection error. Please check your internet connection and try again.",
+        "Server is temporarily unavailable",
+        "An unexpected error occurred"
+    )
+}
+
+@Preview(
+    name = "Error Message - Light Theme",
+    showBackground = true,
+    backgroundColor = 0xFF6200EE
+)
+@Composable
+private fun WordConnectionsErrorMessagePreview(
+    @PreviewParameter(ErrorMessageProvider::class) message: String
+) {
+    MaterialTheme {
+        WordConnectionsErrorMessage(
+            message = message,
+            onDismiss = { },
+            onRetry = { }
+        )
+    }
+}
+
+@Preview(
+    name = "Error Message - Dark Theme",
+    showBackground = true,
+    backgroundColor = 0xFF121212,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+private fun WordConnectionsErrorMessageDarkPreview() {
+    MaterialTheme {
+        WordConnectionsErrorMessage(
+            message = "Failed to load puzzle. Please check your connection.",
+            onDismiss = { },
+            onRetry = { }
+        )
+    }
+}
+
+@Preview(
+    name = "Error Message - Long Text",
+    showBackground = true,
+    backgroundColor = 0xFF6200EE
+)
+@Composable
+private fun WordConnectionsErrorMessageLongTextPreview() {
+    MaterialTheme {
+        WordConnectionsErrorMessage(
+            message = "A very long error message that should wrap properly within the card container and demonstrate how the layout handles extended text content gracefully.",
+            onDismiss = { },
+            onRetry = { }
+        )
     }
 }

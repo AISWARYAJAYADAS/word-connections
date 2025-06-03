@@ -81,15 +81,14 @@ fun WordConnectionsSolvedGroups(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    itemsIndexed(groups, key = { _, group -> group.theme }) { index, group ->
+                    itemsIndexed(groups, key = { _, group -> group.theme }) { _, group ->
                         AnimatedVisibility(
                             visible = true,
                             enter = slideInVertically { it } + fadeIn(),
                             exit = slideOutVertically { -it } + fadeOut()
                         ) {
                             WordConnectionsSolvedGroupCard(
-                                group = group,
-                                index = index
+                                group = group
                             )
                         }
                     }
@@ -103,7 +102,6 @@ fun WordConnectionsSolvedGroups(
 @Composable
 fun WordConnectionsSolvedGroupCard(
     group: PuzzleGroup,
-    index: Int,
     modifier: Modifier = Modifier
 ) {
     val groupColor = when (group.difficulty) {

@@ -1,19 +1,30 @@
 package com.aiswarya.wordconnections.presentation.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
 
 @Composable
 fun WordConnectionsGameControls(
+    modifier: Modifier = Modifier,
     selectedCount: Int,
     onSubmit: () -> Unit,
     onShuffle: () -> Unit,
@@ -22,8 +33,6 @@ fun WordConnectionsGameControls(
     onRestart: () -> Unit,
     enabled: Boolean = true,
     showGameControls: Boolean = true,
-    gameStatus: GameStatus,
-    modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE

@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,9 +42,6 @@ fun WordConnectionsWordGrid(
     val minCardSize = if (isLandscape) 80.dp else 70.dp
     val calculatedSize = (screenWidth - (16.dp * (columns + 1))) / columns
     val cardSize = maxOf(calculatedSize, minCardSize)
-
-    // Add key to force recomposition on orientation change
-    val gridKey = remember(configuration.orientation) { configuration.orientation }
 
     Box(
         modifier = modifier,

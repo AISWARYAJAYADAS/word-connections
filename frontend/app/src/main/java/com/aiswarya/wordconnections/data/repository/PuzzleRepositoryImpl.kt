@@ -9,7 +9,6 @@ import com.aiswarya.wordconnections.domain.model.GameProgress
 import com.aiswarya.wordconnections.domain.model.Puzzle
 import com.aiswarya.wordconnections.domain.model.ValidationResult
 import com.aiswarya.wordconnections.domain.repository.PuzzleRepository
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeout
