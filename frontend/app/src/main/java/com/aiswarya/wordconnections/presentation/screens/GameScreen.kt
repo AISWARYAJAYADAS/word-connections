@@ -71,7 +71,7 @@ fun GameScreen(
                 puzzlesSolved = uiState.puzzlesSolved,
                 onPlayAgain = { viewModel.newGame() },
                 onShare = {
-                    val shareText = "I solved ${uiState.puzzlesSolved} puzzles in Word Connections today! 🎉 #WordConnections"
+                    val shareText = "I solved ${uiState.puzzlesSolved} puzzles in WordConnect today! 🎉 #WordConnect"
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         putExtra(Intent.EXTRA_TEXT, shareText)
                         type = "text/plain"
