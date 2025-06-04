@@ -71,13 +71,12 @@ fun GameScreen(
                 puzzlesSolved = uiState.puzzlesSolved,
                 onPlayAgain = { viewModel.newGame() },
                 onShare = {
-                    val shareText = "I solved ${uiState.puzzlesSolved} puzzles in WordConnect today! 🎉 #WordConnect"
+                    val shareText = "Linked ${uiState.puzzlesSolved} puzzle${if (uiState.puzzlesSolved == 1) "" else "s"} in Word Connect! 🧩 #WordConnect"
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         putExtra(Intent.EXTRA_TEXT, shareText)
                         type = "text/plain"
                     }
-                    context.startActivity(Intent.createChooser(intent, "Share your victory!"))
-                },
+                    context.startActivity(Intent.createChooser(intent, "Share your achievement"))                },
                 modifier = Modifier.fillMaxSize()
             )
         }
