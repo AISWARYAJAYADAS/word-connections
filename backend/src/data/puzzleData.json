@@ -18,5 +18,17 @@
     "theme": "Obscure Animals",
     "words": ["Quokka", "Narwhal", "Axolotl", "Tarsier"],
     "difficulty": "purple"
-  }
+  },
+  [
+  {"theme": "Car Brands", "words": ["Toyota", "Ford", "Honda", "Tesla"], "difficulty": "yellow"},
+  {"theme": "Sports", "words": ["Soccer", "Basketball", "Tennis", "Golf"], "difficulty": "green"},
+  {"theme": "Synonyms for Big", "words": ["Large", "Huge", "Vast", "Gigantic"], "difficulty": "blue"},
+  {"theme": "Mythical Creatures", "words": ["Dragon", "Unicorn", "Phoenix", "Griffin"], "difficulty": "purple"},
+  {"theme": "Fruits", "words": ["Apple", "Banana", "Orange", "Mango"], "difficulty": "yellow"},
+  {"theme": "Capital Cities", "words": ["Tokyo", "Paris", "London", "Delhi"], "difficulty": "green"},
+  {"theme": "Words Starting with B", "words": ["Ball", "Book", "Bridge", "Boat"], "difficulty": "blue"},
+  {"theme": "Rare Gemstones", "words": ["Opal", "Jade", "Topaz", "Amethyst"], "difficulty": "purple"},
+  {"theme": "Musical Instruments", "words": ["Guitar", "Piano", "Violin", "Drum"], "difficulty": "yellow"},
+  {"theme": "Weather Terms", "words": ["Rain", "Snow", "Wind", "Cloud"], "difficulty": "green"}
+]
 ]
