@@ -2,12 +2,16 @@ package com.aiswarya.wordconnections.data.repository
 
 import android.util.Log
 import com.aiswarya.wordconnections.data.local.dao.PuzzleDao
+import com.aiswarya.wordconnections.data.local.entity.PuzzleEntity
+import com.aiswarya.wordconnections.data.local.entity.PuzzleGroupEntity
+import com.aiswarya.wordconnections.data.local.entity.PuzzleWordEntity
 import com.aiswarya.wordconnections.data.mapper.PuzzleMapper
 import com.aiswarya.wordconnections.data.remote.api.PuzzleApiService
 import com.aiswarya.wordconnections.data.remote.dto.EnhancedPuzzleResponseDto
 import com.aiswarya.wordconnections.domain.model.Difficulty
 import com.aiswarya.wordconnections.domain.model.GameProgress
 import com.aiswarya.wordconnections.domain.model.Puzzle
+import com.aiswarya.wordconnections.domain.model.PuzzleEntities
 import com.aiswarya.wordconnections.domain.model.PuzzleGroup
 import com.aiswarya.wordconnections.domain.model.ValidationResult
 import com.aiswarya.wordconnections.domain.repository.PuzzleRepository
@@ -83,9 +87,11 @@ class PuzzleRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.w(TAG, "Failed to fetch puzzle: ${e.message}")
             if (seed == null) { // Fall back to cache or default for non-seeded requests
-                getCachedPuzzle()?.let { Result.success(it) }
-                    ?: Result.success(DEFAULT_PUZZLE)
+                getCachedPuzzle()?.let { return Result.success(it) }
+                saveDefaultPuzzle() // Save default puzzle to Room
+                return Result.success(DEFAULT_PUZZLE)
             } else {
+                saveDefaultPuzzle() // Save default puzzle to Room
                 Result.success(DEFAULT_PUZZLE) // Use default for seeded requests too
             }
         }
@@ -99,24 +105,27 @@ class PuzzleRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Log.w(TAG, "Failed to fetch enhanced puzzle: ${e.message}")
             // Fall back to cache or default for all requests
-            getCachedPuzzle()?.let { Result.success(it) }
-                ?: Result.success(DEFAULT_PUZZLE)
+            getCachedPuzzle()?.let { return Result.success(it) }
+            saveDefaultPuzzle() // Save default puzzle to Room
+            Result.success(DEFAULT_PUZZLE)
         }
     }
 
     override suspend fun validateGuess(puzzleId: String, words: List<String>): Result<ValidationResult> {
         // For default puzzle, simulate validation locally
         if (puzzleId == DEFAULT_PUZZLE.puzzleId) {
-            val group = DEFAULT_PUZZLE.groups.find { group ->
-                group.words.containsAll(words)
-            }
+            val group = DEFAULT_PUZZLE.groups.find { it.words.containsAll(words) }
+            val progress = getPuzzleProgress(puzzleId) ?: GameProgress(puzzleId, emptyList(), 4)
+            val newAttempts = if (group == null) progress.remainingAttempts - 1 else progress.remainingAttempts
+            val newSolvedCategories = if (group != null) progress.solvedGroups + listOfNotNull(group.theme) else progress.solvedGroups
+            savePuzzleProgress(puzzleId, progress.copy(remainingAttempts = newAttempts, solvedGroups = newSolvedCategories))
             return Result.success(
                 ValidationResult(
                     isCorrect = group != null,
                     category = group?.theme,
-                    remainingAttempts = 4, // Default puzzle doesn't track attempts
-                    solvedCategories = if (group != null) listOf(group.theme) else emptyList(),
-                    isOneAway = false // Simplified for default puzzle
+                    remainingAttempts = newAttempts,
+                    solvedCategories = newSolvedCategories,
+                    isOneAway = false // Add logic to check if one word is incorrect
                 )
             )
         }
@@ -139,23 +148,25 @@ class PuzzleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun savePuzzleProgress(puzzleId: String, progress: GameProgress) {
-        if (puzzleId == DEFAULT_PUZZLE.puzzleId) return // Skip saving progress for default puzzle
+        // Save progress for all puzzles, including default puzzle
         puzzleDao.getPuzzleById(puzzleId)?.let { puzzle ->
             puzzleDao.updatePuzzle(puzzle.copy(
                 isCompleted = progress.solvedGroups.size == 4,
                 remainingAttempts = progress.remainingAttempts
             ))
+            // Update word entities for solved groups
+            progress.solvedGroups.forEach { theme ->
+                val group = puzzleDao.getGroupsForPuzzle(puzzleId).find { it.theme == theme }
+                group?.let {
+                    puzzleDao.getWordsForGroup(it.groupId).forEach { word ->
+                        puzzleDao.insertWords(listOf(word.copy(isSolved = true)))
+                    }
+                }
+            }
         }
     }
 
     override suspend fun getPuzzleProgress(puzzleId: String): GameProgress? {
-        if (puzzleId == DEFAULT_PUZZLE.puzzleId) {
-            return GameProgress(
-                puzzleId = puzzleId,
-                solvedGroups = emptyList(),
-                remainingAttempts = 4
-            )
-        }
         return puzzleDao.getPuzzleById(puzzleId)?.let { puzzle ->
             val solvedGroups = puzzleDao.getGroupsForPuzzle(puzzleId)
                 .filter { group ->
@@ -167,6 +178,15 @@ class PuzzleRepositoryImpl @Inject constructor(
                 solvedGroups = solvedGroups,
                 remainingAttempts = puzzle.remainingAttempts
             )
+        } ?: if (puzzleId == DEFAULT_PUZZLE.puzzleId) {
+            // Return default progress if puzzle not in database
+            GameProgress(
+                puzzleId = puzzleId,
+                solvedGroups = emptyList(),
+                remainingAttempts = 4
+            )
+        } else {
+            null
         }
     }
 
@@ -193,10 +213,64 @@ class PuzzleRepositoryImpl @Inject constructor(
         clearOldPuzzles()
     }
 
+    private suspend fun saveDefaultPuzzle() {
+        // Check if default puzzle already exists
+        if (puzzleDao.getPuzzleById(DEFAULT_PUZZLE.puzzleId) == null) {
+            val puzzleEntities = defaultPuzzleToEntities()
+            puzzleDao.insertCompletePuzzle(
+                puzzleEntities.puzzle,
+                puzzleEntities.groups,
+                puzzleEntities.words
+            )
+            Log.d(TAG, "Saved default puzzle to Room database")
+        }
+    }
+
+    private fun defaultPuzzleToEntities(): PuzzleEntities {
+        val puzzleEntity = PuzzleEntity(
+            puzzleId = DEFAULT_PUZZLE.puzzleId,
+            title = DEFAULT_PUZZLE.title,
+            difficulty = DEFAULT_PUZZLE.difficulty,
+            createdAt = System.currentTimeMillis(),
+            isCompleted = false,
+            score = 0,
+            remainingAttempts = 4
+        )
+
+        val groupEntities = DEFAULT_PUZZLE.groups.map { group ->
+            PuzzleGroupEntity(
+                groupId = group.groupId,
+                puzzleId = DEFAULT_PUZZLE.puzzleId,
+                theme = group.theme,
+                difficulty = group.difficulty.ordinal + 1,
+                color = group.color
+            )
+        }
+
+        val wordEntities = DEFAULT_PUZZLE.groups.flatMapIndexed { _, group ->
+            group.words.mapIndexed { wordIndex, word ->
+                PuzzleWordEntity(
+                    wordId = "${DEFAULT_PUZZLE.puzzleId}_${group.theme}_$wordIndex",
+                    puzzleId = DEFAULT_PUZZLE.puzzleId,
+                    groupId = group.groupId,
+                    word = word,
+                    position = wordIndex,
+                    isSolved = false
+                )
+            }
+        }
+
+        return PuzzleEntities(puzzleEntity, groupEntities, wordEntities)
+    }
+
     private suspend fun clearOldPuzzles() {
         val puzzles = puzzleDao.getAllPuzzles().firstOrNull() ?: return
-        if (puzzles.size > MAX_CACHED_PUZZLES) {
-            puzzles.drop(MAX_CACHED_PUZZLES).forEach { puzzleDao.deletePuzzle(it) }
+        // Exclude default puzzle from deletion
+        val nonDefaultPuzzles = puzzles.filter { it.puzzleId != DEFAULT_PUZZLE.puzzleId }
+        if (nonDefaultPuzzles.size > MAX_CACHED_PUZZLES) {
+            nonDefaultPuzzles.sortedByDescending { it.createdAt }
+                .drop(MAX_CACHED_PUZZLES)
+                .forEach { puzzleDao.deletePuzzle(it) }
         }
     }
 
