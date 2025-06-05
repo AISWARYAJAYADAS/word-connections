@@ -1,32 +1,13 @@
 package com.aiswarya.wordconnections.presentation.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,10 +25,12 @@ fun WordConnectionsErrorMessage(
     message: String,
     onDismiss: () -> Unit,
     onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showRetryButton: Boolean = true
 ) {
     var showError by remember { mutableStateOf(true) }
     val haptic = LocalHapticFeedback.current
+    val isOfflineMessage = message.contains("Playing offline")
 
     LaunchedEffect(showError) {
         if (showError) {
@@ -71,8 +54,10 @@ fun WordConnectionsErrorMessage(
                     .padding(16.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    containerColor = if (isOfflineMessage) MaterialTheme.colorScheme.primaryContainer
+                    else MaterialTheme.colorScheme.errorContainer,
+                    contentColor = if (isOfflineMessage) MaterialTheme.colorScheme.onPrimaryContainer
+                    else MaterialTheme.colorScheme.onErrorContainer
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
             ) {
@@ -82,9 +67,9 @@ fun WordConnectionsErrorMessage(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Warning,
-                        contentDescription = "Error",
-                        tint = MaterialTheme.colorScheme.error,
+                        imageVector = if (isOfflineMessage) Icons.Default.Info else Icons.Default.Warning,
+                        contentDescription = if (isOfflineMessage) "Info" else "Error",
+                        tint = if (isOfflineMessage) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.size(32.dp)
                     )
 
@@ -110,19 +95,21 @@ fun WordConnectionsErrorMessage(
                             Text("Dismiss")
                         }
 
-                        Button(
-                            onClick = {
-                                showError = false
-                                onRetry()
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        ) {
-                            Text("Retry")
+                        if (showRetryButton) {
+                            Button(
+                                onClick = {
+                                    showError = false
+                                    onRetry()
+                                },
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                )
+                            ) {
+                                Text("Retry")
+                            }
                         }
                     }
                 }
@@ -135,9 +122,9 @@ fun WordConnectionsErrorMessage(
 class ErrorMessageProvider : PreviewParameterProvider<String> {
     override val values = sequenceOf(
         "Failed to load puzzle",
-        "Network connection error. Please check your internet connection and try again.",
-        "Server is temporarily unavailable",
-        "An unexpected error occurred"
+        "No internet connection. Please check your network.",
+        "Playing offline with a cached puzzle.",
+        "Playing offline with a default puzzle."
     )
 }
 
@@ -154,7 +141,8 @@ private fun WordConnectionsErrorMessagePreview(
         WordConnectionsErrorMessage(
             message = message,
             onDismiss = { },
-            onRetry = { }
+            onRetry = { },
+            showRetryButton = !message.contains("Playing offline")
         )
     }
 }
@@ -169,9 +157,10 @@ private fun WordConnectionsErrorMessagePreview(
 private fun WordConnectionsErrorMessageDarkPreview() {
     MaterialTheme {
         WordConnectionsErrorMessage(
-            message = "Failed to load puzzle. Please check your connection.",
+            message = "Playing offline with a default puzzle.",
             onDismiss = { },
-            onRetry = { }
+            onRetry = { },
+            showRetryButton = false
         )
     }
 }
@@ -185,9 +174,10 @@ private fun WordConnectionsErrorMessageDarkPreview() {
 private fun WordConnectionsErrorMessageLongTextPreview() {
     MaterialTheme {
         WordConnectionsErrorMessage(
-            message = "A very long error message that should wrap properly within the card container and demonstrate how the layout handles extended text content gracefully.",
+            message = "No internet connection. Playing offline with a default puzzle to ensure you can continue enjoying the game.",
             onDismiss = { },
-            onRetry = { }
+            onRetry = { },
+            showRetryButton = false
         )
     }
 }

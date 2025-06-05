@@ -19,6 +19,7 @@ import com.aiswarya.wordconnections.presentation.ui.components.*
 import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
 import com.aiswarya.wordconnections.presentation.viewmodel.GameUiState
 import com.aiswarya.wordconnections.presentation.viewmodel.GameViewModel
+import com.aiswarya.wordconnections.presentation.viewmodel.PuzzleSource
 
 @Composable
 fun GameScreen(
@@ -62,7 +63,8 @@ fun GameScreen(
                 message = error,
                 onDismiss = { viewModel.clearError() },
                 onRetry = { viewModel.loadPuzzle() },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter),
+                showRetryButton = uiState.puzzleSource == PuzzleSource.NETWORK // Only show retry for network errors
             )
         }
 
@@ -76,7 +78,8 @@ fun GameScreen(
                         putExtra(Intent.EXTRA_TEXT, shareText)
                         type = "text/plain"
                     }
-                    context.startActivity(Intent.createChooser(intent, "Share your achievement"))                },
+                    context.startActivity(Intent.createChooser(intent, "Share your achievement"))
+                },
                 modifier = Modifier.fillMaxSize()
             )
         }

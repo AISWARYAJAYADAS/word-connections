@@ -52,12 +52,31 @@ class GameViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             getPuzzleUseCase(seed, forceRefresh = true).fold(
                 onSuccess = { puzzle ->
+                    val puzzleSource = if (puzzle.puzzleId == "default_puzzle") {
+                        PuzzleSource.HARDCODED
+                    } else {
+                        // Check if puzzle is from cache by attempting to fetch from network
+                        try {
+                            getPuzzleUseCase(seed, forceRefresh = true)
+                            PuzzleSource.NETWORK
+                        } catch (e: Exception) {
+                            PuzzleSource.CACHE
+                        }
+                    }
                     _uiState.update {
                         it.copy(
                             puzzle = puzzle,
                             isLoading = false,
                             gameStatus = GameStatus.PLAYING,
-                            remainingAttempts = 4
+                            remainingAttempts = 4,
+                            puzzleSource = puzzleSource,
+                            errorMessage = if (puzzleSource != PuzzleSource.NETWORK) {
+                                when (puzzleSource) {
+                                    PuzzleSource.CACHE -> "Playing offline with a cached puzzle."
+                                    PuzzleSource.HARDCODED -> "Playing offline with a default puzzle."
+                                    else -> null
+                                }
+                            } else null
                         )
                     }
                 },
@@ -65,8 +84,7 @@ class GameViewModel @Inject constructor(
                     Log.e("GameViewModel", "Error loading puzzle", error)
                     val errorMessage = when (error) {
                         is UnknownHostException, is ConnectException ->
-                            "No internet connection. Using cached puzzle or please check your network."
-
+                            "No internet connection. Please check your network."
                         else -> "Failed to load puzzle: ${error.message ?: "Unknown error"}"
                     }
                     _uiState.update {
@@ -175,7 +193,8 @@ class GameViewModel @Inject constructor(
                 selectedWords = emptySet(),
                 solvedGroups = emptyList(),
                 gameStatus = GameStatus.PLAYING,
-                remainingAttempts = 4
+                remainingAttempts = 4,
+                puzzleSource = PuzzleSource.NETWORK
             )
         }
         loadPuzzle()
@@ -188,7 +207,8 @@ class GameViewModel @Inject constructor(
                 selectedWords = emptySet(),
                 solvedGroups = emptyList(),
                 gameStatus = GameStatus.PLAYING,
-                remainingAttempts = 4
+                remainingAttempts = 4,
+                puzzleSource = PuzzleSource.NETWORK
             )
         }
         loadPuzzle(seed = seed)

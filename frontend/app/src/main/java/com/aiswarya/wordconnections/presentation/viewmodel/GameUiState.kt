@@ -11,9 +11,14 @@ data class GameUiState(
     val gameStatus: GameStatus = GameStatus.PLAYING,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val puzzlesSolved: Int = 0
+    val puzzlesSolved: Int = 0,
+    val puzzleSource: PuzzleSource = PuzzleSource.NETWORK // New field
 )
 
 enum class GameStatus {
     PLAYING, WON, LOST
+}
+
+enum class PuzzleSource {
+    NETWORK, CACHE, HARDCODED
 }

@@ -69,6 +69,8 @@ dependencies {
     // 💉 Dependency Injection - Hilt with KSP
     implementation("com.google.dagger:hilt-android:2.52")
     implementation(libs.androidx.material3.window.size.class1.android)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.work.runtime.ktx)
     ksp("com.google.dagger:hilt-compiler:2.52")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
