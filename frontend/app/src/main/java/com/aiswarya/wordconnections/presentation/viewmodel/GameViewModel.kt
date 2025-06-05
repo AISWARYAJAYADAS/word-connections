@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.net.ConnectException
+import java.net.UnknownHostException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -34,8 +36,6 @@ class GameViewModel @Inject constructor(
         val lastResetDate = savedStateHandle.get<String>("lastResetDate") ?: ""
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
 
-
-
         if (lastResetDate != today) {
             savedStateHandle["puzzlesSolved"] = 0
             savedStateHandle["lastResetDate"] = today
@@ -50,7 +50,7 @@ class GameViewModel @Inject constructor(
     fun loadPuzzle(seed: Int? = null) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            getPuzzleUseCase(seed).fold(
+            getPuzzleUseCase(seed, forceRefresh = true).fold(
                 onSuccess = { puzzle ->
                     _uiState.update {
                         it.copy(
@@ -63,10 +63,16 @@ class GameViewModel @Inject constructor(
                 },
                 onFailure = { error ->
                     Log.e("GameViewModel", "Error loading puzzle", error)
+                    val errorMessage = when (error) {
+                        is UnknownHostException, is ConnectException ->
+                            "No internet connection. Using cached puzzle or please check your network."
+
+                        else -> "Failed to load puzzle: ${error.message ?: "Unknown error"}"
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            errorMessage = error.message ?: "Failed to load puzzle"
+                            errorMessage = errorMessage
                         )
                     }
                 }
@@ -93,7 +99,10 @@ class GameViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            validateGuessUseCase(currentState.puzzle.puzzleId, currentState.selectedWords.toList()).fold(
+            validateGuessUseCase(
+                currentState.puzzle.puzzleId,
+                currentState.selectedWords.toList()
+            ).fold(
                 onSuccess = { result -> handleValidationResult(result) },
                 onFailure = { error ->
                     _uiState.update {
@@ -110,10 +119,13 @@ class GameViewModel @Inject constructor(
     private fun handleValidationResult(result: ValidationResult) {
         _uiState.update { currentState ->
             if (result.isCorrect) {
-                val solvedGroup = currentState.puzzle?.groups?.find { group -> result.category?.let { group.theme == it } ?: false }
+                val solvedGroup = currentState.puzzle?.groups?.find { group ->
+                    result.category?.let { group.theme == it } ?: false
+                }
                 val newSolvedGroups = currentState.solvedGroups + listOfNotNull(solvedGroup)
                 val isGameWon = newSolvedGroups.size == 4
-                val newPuzzlesSolved = if (isGameWon) currentState.puzzlesSolved + 1 else currentState.puzzlesSolved
+                val newPuzzlesSolved =
+                    if (isGameWon) currentState.puzzlesSolved + 1 else currentState.puzzlesSolved
                 if (isGameWon) {
                     savedStateHandle["puzzlesSolved"] = newPuzzlesSolved
                 }
@@ -157,12 +169,28 @@ class GameViewModel @Inject constructor(
     }
 
     fun restartGame() {
-        _uiState.update { it.copy(puzzle = null, selectedWords = emptySet(), solvedGroups = emptyList(), gameStatus = GameStatus.PLAYING, remainingAttempts = 4) }
+        _uiState.update {
+            it.copy(
+                puzzle = null,
+                selectedWords = emptySet(),
+                solvedGroups = emptyList(),
+                gameStatus = GameStatus.PLAYING,
+                remainingAttempts = 4
+            )
+        }
         loadPuzzle()
     }
 
     fun newGame(seed: Int? = null) {
-        _uiState.update { it.copy(puzzle = null, selectedWords = emptySet(), solvedGroups = emptyList(), gameStatus = GameStatus.PLAYING, remainingAttempts = 4) }
-        loadPuzzle(seed)
+        _uiState.update {
+            it.copy(
+                puzzle = null,
+                selectedWords = emptySet(),
+                solvedGroups = emptyList(),
+                gameStatus = GameStatus.PLAYING,
+                remainingAttempts = 4
+            )
+        }
+        loadPuzzle(seed = seed)
     }
 }

@@ -9,9 +9,7 @@ import com.aiswarya.wordconnections.domain.model.GameProgress
 import com.aiswarya.wordconnections.domain.model.Puzzle
 import com.aiswarya.wordconnections.domain.model.ValidationResult
 import com.aiswarya.wordconnections.domain.repository.PuzzleRepository
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,33 +22,26 @@ class PuzzleRepositoryImpl @Inject constructor(
 
     companion object {
         private const val TAG = "PuzzleRepository"
-        private const val NETWORK_TIMEOUT = 30_000L
-        private const val MAX_RETRIES = 3
-        private const val RETRY_DELAY = 1000L
+        private const val MAX_CACHED_PUZZLES = 10
     }
 
     override suspend fun getPuzzle(seed: Int?): Result<Puzzle> {
-        getCachedPuzzle()?.let { return Result.success(it) }
-        var retryCount = 0
-        var lastException: Exception? = null
-        while (retryCount < MAX_RETRIES) {
-            try {
-                val response = withTimeout(NETWORK_TIMEOUT) {
-                    apiService.getEnhancedPuzzle(seed)
-                }
-                savePuzzleToLocal(response)
-                return Result.success(puzzleMapper.toDomain(response))
-            } catch (e: Exception) {
-                lastException = e
-                retryCount++
-                Log.w(TAG, "Attempt $retryCount failed: ${e.message}")
-                if (retryCount < MAX_RETRIES) {
-                    delay(RETRY_DELAY * retryCount)
-                }
+        if (seed == null) { // Check cache for non-seeded requests
+            getCachedPuzzle()?.let { return Result.success(it) }
+        }
+        return try {
+            val response = apiService.getEnhancedPuzzle(seed)
+            savePuzzleToLocal(response)
+            Result.success(puzzleMapper.toDomain(response))
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to fetch puzzle: ${e.message}")
+            if (seed == null) { // Fall back to cache for non-seeded requests
+                getCachedPuzzle()?.let { Result.success(it) }
+                    ?: Result.failure(e)
+            } else {
+                Result.failure(e)
             }
         }
-        return getCachedPuzzle()?.let { Result.success(it) }
-            ?: Result.failure(lastException ?: Exception("Network error after $MAX_RETRIES attempts"))
     }
 
     override suspend fun getEnhancedPuzzle(seed: Int?): Result<Puzzle> {
@@ -59,7 +50,10 @@ class PuzzleRepositoryImpl @Inject constructor(
             savePuzzleToLocal(response)
             Result.success(puzzleMapper.toDomain(response))
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.w(TAG, "Failed to fetch enhanced puzzle: ${e.message}")
+            // Fall back to cache for all requests on network failure
+            getCachedPuzzle()?.let { Result.success(it) }
+                ?: Result.failure(e)
         }
     }
 
@@ -121,5 +115,13 @@ class PuzzleRepositoryImpl @Inject constructor(
             puzzleEntities.groups,
             puzzleEntities.words
         )
+        clearOldPuzzles()
+    }
+
+    private suspend fun clearOldPuzzles() {
+        val puzzles = puzzleDao.getAllPuzzles().firstOrNull() ?: return
+        if (puzzles.size > MAX_CACHED_PUZZLES) {
+            puzzles.drop(MAX_CACHED_PUZZLES).forEach { puzzleDao.deletePuzzle(it) }
+        }
     }
 }

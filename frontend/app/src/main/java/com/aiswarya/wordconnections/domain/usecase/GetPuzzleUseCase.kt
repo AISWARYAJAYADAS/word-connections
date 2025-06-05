@@ -9,7 +9,11 @@ import javax.inject.Singleton
 class GetPuzzleUseCase @Inject constructor(
     private val repository: PuzzleRepository
 ) {
-    suspend operator fun invoke(seed: Int? = null): Result<Puzzle> {
-        return repository.getEnhancedPuzzle(seed)
+    suspend operator fun invoke(seed: Int? = null, forceRefresh: Boolean = true): Result<Puzzle> {
+        return if (forceRefresh) {
+            repository.getEnhancedPuzzle(seed)
+        } else {
+            repository.getPuzzle(seed)
+        }
     }
 }
