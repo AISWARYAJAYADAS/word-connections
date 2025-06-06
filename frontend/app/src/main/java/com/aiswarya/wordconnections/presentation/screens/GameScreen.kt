@@ -4,7 +4,10 @@ import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
@@ -14,7 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.aiswarya.wordconnections.presentation.ui.components.*
 import com.aiswarya.wordconnections.presentation.viewmodel.GameStatus
 import com.aiswarya.wordconnections.presentation.viewmodel.GameUiState
@@ -25,6 +30,7 @@ import com.aiswarya.wordconnections.presentation.viewmodel.PuzzleSource
 fun GameScreen(
     viewModel: GameViewModel,
     windowSizeClass: WindowSizeClass,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -45,10 +51,35 @@ fun GameScreen(
             .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
     ) {
-        if (isLandscape || isTablet) {
-            LandscapeTabletLayout(uiState, viewModel, paddingValues)
-        } else {
-            PortraitMobileLayout(uiState, viewModel, paddingValues)
+        Column(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(paddingValues),
+                horizontalArrangement = Arrangement.End
+            ) {
+                OutlinedButton(
+                    onClick = { navController.navigate("instructions") },
+                    modifier = Modifier.padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "How to Play",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontFamily = Poppins,
+                            fontWeight = FontWeight.Medium
+                        )
+                    )
+                }
+            }
+
+            if (isLandscape || isTablet) {
+                LandscapeTabletLayout(uiState, viewModel, paddingValues)
+            } else {
+                PortraitMobileLayout(uiState, viewModel, paddingValues)
+            }
         }
 
         if (uiState.isLoading) {
@@ -64,7 +95,7 @@ fun GameScreen(
                 onDismiss = { viewModel.clearError() },
                 onRetry = { viewModel.loadPuzzle() },
                 modifier = Modifier.align(Alignment.BottomCenter),
-                showRetryButton = uiState.puzzleSource == PuzzleSource.NETWORK // Only show retry for network errors
+                showRetryButton = uiState.puzzleSource == PuzzleSource.NETWORK
             )
         }
 

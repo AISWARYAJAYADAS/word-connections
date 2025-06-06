@@ -10,31 +10,32 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.aiswarya.wordconnections.presentation.screens.GameScreen
+import com.aiswarya.wordconnections.data.local.preferences.UserPreferences
+import com.aiswarya.wordconnections.presentation.WordConnectionsNavHost
 import com.aiswarya.wordconnections.presentation.ui.theme.WordConnectionsTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var userPreferences: UserPreferences
+
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Enable edge-to-edge
         enableEdgeToEdge()
 
         setContent {
             WordConnectionsTheme {
-                // Handle window size class for responsive layouts
-                val windowSizeClass = calculateWindowSizeClass(this)
-
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    GameScreen(
-                        viewModel = viewModel(),
+                    val windowSizeClass = calculateWindowSizeClass(this)
+                    WordConnectionsNavHost(
+                        userPreferences = userPreferences,
                         windowSizeClass = windowSizeClass
                     )
                 }
