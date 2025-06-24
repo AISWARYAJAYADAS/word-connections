@@ -12,8 +12,8 @@ A modern Android puzzle game inspired by NYT Connections. Built with Jetpack Com
 |-----------|----------------|----------------|
 | <img src="screenshots/home.png" width="200" height="400" alt="Home Screen"> | <img src="screenshots/selection.png" width="200" height="400" alt="Word Selection"> | <img src="screenshots/victory%20screen.png" width="200" height="400" alt="Victory Screen"> |
 
-| Instructions |
-|--------------|
+| How to Play 1 | How to Play 2 |
+|----------------|---------------|
 | <img src="screenshots/How%20to%20play%201.png" width="200" height="400" alt="How to Play 1"> | <img src="screenshots/How%20to%20play%202.png" width="200" height="400" alt="How to Play 2"> |
 
 ## Features
