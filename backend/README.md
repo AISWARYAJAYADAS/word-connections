@@ -342,4 +342,3 @@ open coverage/lcov-report/index.html
 
 ---
 
-**Built with ❤️ using TypeScript and Express.js**
